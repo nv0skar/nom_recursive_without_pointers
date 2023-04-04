@@ -153,6 +153,19 @@ impl<T: Clone + Default> HasRecursiveInfo<T> for RecursiveInfo<T> {
     }
 }
 
+pub trait HasRecursiveType<T: Clone + Default> {
+    fn get_value(&self) -> T;
+}
+
+impl<T: Clone + Default, U> HasRecursiveType<T> for nom_locate::LocatedSpan<T, U>
+where
+    U: HasRecursiveInfo<T>,
+{
+    fn get_value(&self) -> T {
+        self.fragment().clone()
+    }
+}
+
 impl<T: Clone + Default, U> HasRecursiveInfo<T> for nom_locate::LocatedSpan<T, U>
 where
     U: HasRecursiveInfo<T>,
