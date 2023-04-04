@@ -90,13 +90,13 @@ pub struct RecursiveInfo<T: Clone + Default> {
     copy: T,
 }
 
-impl<T: Copy + Clone + Default> Default for RecursiveInfo<T> {
+impl<T: Clone + Default> Default for RecursiveInfo<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: Copy + Clone + Default> RecursiveInfo<T> {
+impl<T: Clone + Default> RecursiveInfo<T> {
     pub fn new() -> Self {
         RecursiveInfo {
             flag: [0; RECURSIVE_FLAG_WORDS],
@@ -138,14 +138,14 @@ impl<T: Copy + Clone + Default> RecursiveInfo<T> {
 /// Trait for recursive tracer
 ///
 /// The input type of nom parser must implement this.
-pub trait HasRecursiveInfo<T: Copy + Clone + Default> {
+pub trait HasRecursiveInfo<T: Clone + Default> {
     fn get_recursive_info(&self) -> RecursiveInfo<T>;
     fn set_recursive_info(self, info: RecursiveInfo<T>) -> Self;
 }
 
-impl<T: Copy + Clone + Default> HasRecursiveInfo<T> for RecursiveInfo<T> {
+impl<T: Clone + Default> HasRecursiveInfo<T> for RecursiveInfo<T> {
     fn get_recursive_info(&self) -> RecursiveInfo<T> {
-        *self
+        self.clone()
     }
 
     fn set_recursive_info(self, info: RecursiveInfo<T>) -> Self {
@@ -153,7 +153,7 @@ impl<T: Copy + Clone + Default> HasRecursiveInfo<T> for RecursiveInfo<T> {
     }
 }
 
-impl<T: Copy + Clone + Default, U> HasRecursiveInfo<T> for nom_locate::LocatedSpan<T, U>
+impl<T: Clone + Default, U> HasRecursiveInfo<T> for nom_locate::LocatedSpan<T, U>
 where
     U: HasRecursiveInfo<T>,
 {
