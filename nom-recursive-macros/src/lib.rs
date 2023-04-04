@@ -47,7 +47,7 @@ fn impl_recursive_parser_bofore(item: &ItemFn) -> Stmt {
             use nom_recursive::HasRecursiveInfo;
             let mut info = #input.get_recursive_info();
 
-            let actual = *s.fragment();
+            let actual = *s;
 
             if actual != info.get_copy() {
                 #[cfg(feature = "trace")]
