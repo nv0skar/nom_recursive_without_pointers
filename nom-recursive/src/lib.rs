@@ -14,7 +14,7 @@
 //!
 //! // Input type must implement trait HasRecursiveInfo
 //! // nom_locate::LocatedSpan<T, RecursiveInfo> implements it.
-//! type Span<'a> = LocatedSpan<&'a str, RecursiveInfo>;
+//! type Span<'a> = LocatedSpan<&'a str, RecursiveInfo<&'a str>>;
 //!
 //! pub fn expr(s: Span) -> IResult<Span, String> {
 //!     alt((expr_binary, term))(s)
@@ -85,22 +85,22 @@ thread_local!(
 
 /// The type of payload used by recursive tracer
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct RecursiveInfo {
+pub struct RecursiveInfo<T: Clone + Default> {
     flag: [u64; RECURSIVE_FLAG_WORDS],
-    ptr: *const u8,
+    copy: T,
 }
 
-impl Default for RecursiveInfo {
+impl<T: Copy + Clone + Default> Default for RecursiveInfo<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl RecursiveInfo {
+impl<T: Copy + Clone + Default> RecursiveInfo<T> {
     pub fn new() -> Self {
         RecursiveInfo {
             flag: [0; RECURSIVE_FLAG_WORDS],
-            ptr: std::ptr::null(),
+            copy: Default::default(),
         }
     }
 
@@ -126,42 +126,42 @@ impl RecursiveInfo {
         }
     }
 
-    pub fn get_ptr(&self) -> *const u8 {
-        self.ptr
+    pub fn get_copy(&self) -> T {
+        self.copy.clone()
     }
 
-    pub fn set_ptr(&mut self, ptr: *const u8) {
-        self.ptr = ptr;
+    pub fn set_copy(&mut self, copy: T) {
+        self.copy = copy;
     }
 }
 
 /// Trait for recursive tracer
 ///
 /// The input type of nom parser must implement this.
-pub trait HasRecursiveInfo {
-    fn get_recursive_info(&self) -> RecursiveInfo;
-    fn set_recursive_info(self, info: RecursiveInfo) -> Self;
+pub trait HasRecursiveInfo<T: Copy + Clone + Default> {
+    fn get_recursive_info(&self) -> RecursiveInfo<T>;
+    fn set_recursive_info(self, info: RecursiveInfo<T>) -> Self;
 }
 
-impl HasRecursiveInfo for RecursiveInfo {
-    fn get_recursive_info(&self) -> RecursiveInfo {
+impl<T: Copy + Clone + Default> HasRecursiveInfo<T> for RecursiveInfo<T> {
+    fn get_recursive_info(&self) -> RecursiveInfo<T> {
         *self
     }
 
-    fn set_recursive_info(self, info: RecursiveInfo) -> Self {
+    fn set_recursive_info(self, info: RecursiveInfo<T>) -> Self {
         info
     }
 }
 
-impl<T, U> HasRecursiveInfo for nom_locate::LocatedSpan<T, U>
+impl<T: Copy + Clone + Default, U> HasRecursiveInfo<T> for nom_locate::LocatedSpan<T, U>
 where
-    U: HasRecursiveInfo,
+    U: HasRecursiveInfo<T>,
 {
-    fn get_recursive_info(&self) -> RecursiveInfo {
+    fn get_recursive_info(&self) -> RecursiveInfo<T> {
         self.extra.get_recursive_info()
     }
 
-    fn set_recursive_info(mut self, info: RecursiveInfo) -> Self {
+    fn set_recursive_info(mut self, info: RecursiveInfo<T>) -> Self {
         self.extra = self.extra.set_recursive_info(info);
         self
     }

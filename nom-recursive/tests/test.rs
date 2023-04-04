@@ -4,7 +4,7 @@ use nom::IResult;
 use nom_locate::LocatedSpan;
 use nom_recursive::{recursive_parser, RecursiveInfo};
 
-type Span<'a> = LocatedSpan<&'a str, RecursiveInfo>;
+type Span<'a> = LocatedSpan<&'a str, RecursiveInfo<&'a str>>;
 
 pub fn expr(s: Span) -> IResult<Span, String> {
     alt((expr_binary, term))(s)

@@ -47,17 +47,16 @@ fn impl_recursive_parser_bofore(item: &ItemFn) -> Stmt {
             use nom_recursive::HasRecursiveInfo;
             let mut info = #input.get_recursive_info();
 
-            use nom::AsBytes;
-            let ptr = #input.as_bytes().as_ptr();
+            let actual = *s.fragment();
 
-            if ptr != info.get_ptr() {
+            if actual != info.get_copy() {
                 #[cfg(feature = "trace")]
                 {
                     use nom_tracable::Tracable;
                     nom_tracable::custom_trace(&#input, stringify!(#ident), "recursion flag clear", "\u{001b}[1;36m")
                 };
                 info.clear_flags();
-                info.set_ptr(ptr);
+                info.set_copy(actual);
             }
 
             if info.check_flag(id) {
